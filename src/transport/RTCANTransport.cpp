@@ -47,23 +47,26 @@ void RTCANTransport::recv_cb(rtcan_msg_t &rtcan_msg) {
 	RTCANPublisher* pubp = static_cast<RTCANPublisher *>(rtcan_msg.params);
 	Message *msgp = const_cast<Message *>(&Message::get_msg_from_raw_data(rtcan_msg.data));
 
+	if (rtcan_msg.status == RTCAN_MSG_BUSY) {
 #if R2P_USE_BRIDGE_MODE
-	R2P_ASSERT(pubp->get_transport() != NULL);
-	{ MessageGuardUnsafe guard(*msgp, *pubp->get_topic());
-	msgp->set_source(pubp->get_transport());
-    pubp->publish_locally_unsafe(*msgp);
-    if (pubp->get_topic()->is_forwarding()) {
-      pubp->publish_remotely_unsafe(*msgp);
-    } }
+		R2P_ASSERT(pubp->get_transport() != NULL);
+		{ MessageGuardUnsafe guard(*msgp, *pubp->get_topic());
+		msgp->set_source(pubp->get_transport());
+		pubp->publish_locally_unsafe(*msgp);
+		if (pubp->get_topic()->is_forwarding()) {
+		  pubp->publish_remotely_unsafe(*msgp);
+		} }
 #else
-	pubp->publish_locally_unsafe(*msgp);
+		pubp->publish_locally_unsafe(*msgp);
 #endif
+	}
 
 	// allocate again for next message from RTCAN
 	if (pubp->alloc_unsafe(msgp)) {
 		rtcan_msg.data = msgp->get_raw_data();
+		rtcan_msg.status = RTCAN_MSG_READY;
 	} else {
-		rtcan_msg.status = RTCAN_MSG_BUSY;
+		rtcan_msg.status = RTCAN_MSG_ERROR;
 //		R2P_ASSERT(false);
 	}
 }
