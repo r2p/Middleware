@@ -57,20 +57,9 @@ uint8_t stm32_id8(void) {
 bool callback(const PWM2Msg &msg) {
 	int16_t pwm;
 
-	switch (stm32_id8()) {
-	case M1:
-		pwm = msg.pwm1;
-		break;
-	case M2:
-		pwm = msg.pwm2;
-		break;
-	default:
-		pwm = 0;
-		return true;
-	}
+	pwm = msg.value[MOTOR_ID];
 
-	chSysLock()
-	;
+	chSysLock();
 
 	if (pwm > 0) {
 		pwm_lld_enable_channel(&PWM_DRIVER, 0, pwm);
@@ -302,20 +291,7 @@ msg_t qeipub_node(void *arg) {
 	qeiStart(&QEI_DRIVER, &qeicfg);
 	qeiEnable (&QEI_DRIVER);
 
-	switch (stm32_id8()) {
-	case M1:
-		node.advertise(qei_pub, "qei1");
-		break;
-	case M2:
-		node.advertise(qei_pub, "qei2");
-		break;
-	case M3:
-		node.advertise(qei_pub, "qei3");
-		break;
-	default:
-		node.advertise(qei_pub, "qei");
-		break;
-	}
+	node.advertise(qei_pub, "qei"MOTOR_ID_STRING);
 
 	for (;;) {
 		time = chTimeNow();
@@ -347,21 +323,7 @@ msg_t encoder_node(void *arg) {
 	qeiStart(&QEI_DRIVER, &qeicfg);
 	qeiEnable (&QEI_DRIVER);
 
-
-	switch (stm32_id8()) {
-	case M1:
-		node.advertise(enc_pub, "encoder1");
-		break;
-	case M2:
-		node.advertise(enc_pub, "encoder2");
-		break;
-	case M3:
-		node.advertise(enc_pub, "encoder3");
-		break;
-	default:
-		node.advertise(enc_pub, "encoder");
-		break;
-	}
+	node.advertise(enc_pub, "encoder"MOTOR_ID_STRING);
 
 	for (;;) {
 		time = chTimeNow();

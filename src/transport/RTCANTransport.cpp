@@ -78,6 +78,7 @@ void RTCANTransport::free_header(rtcan_msg_t &rtcan_msg) {
 
 RemotePublisher *RTCANTransport::create_publisher(Topic &topic, const uint8_t raw_params[]) const {
 	RTCANPublisher * rpubp = new RTCANPublisher(*const_cast<RTCANTransport *>(this));
+	Topic & mgmt_topic = Middleware::instance.get_mgmt_topic();
 	Message * msgp;
 	bool success;
 
@@ -95,7 +96,11 @@ RemotePublisher *RTCANTransport::create_publisher(Topic &topic, const uint8_t ra
 
 	rtcan_headerp->status = RTCAN_MSG_READY;
 
-	rtcanReceiveMask(&RTCAND1, rtcan_headerp, 0xFF00);
+	if (&topic == &mgmt_topic) {
+		rtcanReceiveMask(&RTCAND1, rtcan_headerp, 0xFF00);
+	} else {
+		rtcanReceiveMask(&RTCAND1, rtcan_headerp, 0xFFFF);
+	}
 	return rpubp;
 }
 
@@ -152,7 +157,8 @@ rtcan_id_t RTCANTransport::topic_id(const Topic &topic) const {
 
 	if (index < 0) return (255 << 8);
 
-	rtcan_id = ((index & 0x0F) << 12) | ((stm32_id8() & 0x0F) << 8) | stm32_id8();
+	rtcan_id = ((index & 0xFF) << 8) | stm32_id8();
+
 	return rtcan_id;
 }
 
