@@ -2,6 +2,11 @@
 
 namespace r2p {
 
+class Int32Msg: public Message {
+public:
+	int32_t data;
+}R2P_PACKED;
+
 class Float32Msg: public Message {
 public:
 	float data;
