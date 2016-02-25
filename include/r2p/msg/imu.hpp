@@ -39,6 +39,15 @@ struct IMUMsg: public Message {
 	float yaw;
 } R2P_PACKED;
 
+struct GPSMsg: public Message {
+	bool valid;
+	int satellites;
+	float latitude;
+	float longitude;
+	float altitude;
+} R2P_PACKED;
+
+
 #define IMURAW9_ID		(41 << 8)
 #define IMUATT_ID		(42 << 8)
 #define TILT_ID		    (43 << 8)
